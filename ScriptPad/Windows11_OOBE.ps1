@@ -117,17 +117,21 @@ $UnattendXml = @'
         <NetworkLocation>Work</NetworkLocation>
         <ProtectYourPC>1</ProtectYourPC>
       </OOBE>
-      <UserAccounts>
-        <AdministratorPassword>
-          <Value>Pa55w.rd</Value>
-          <PlainText>true</PlainText>
-        </AdministratorPassword>
-      </UserAccounts>
-      <AutoLogon>
-        <Username>Administrator</Username>
-        <Enabled>true</Enabled>
-        <LogonCount>1</LogonCount>
-      </AutoLogon>
+        <UserAccounts>
+          <AdministratorPassword>
+            <Value>WelcomeOvoko2025</Value>
+            <PlainText>true</PlainText>
+          </AdministratorPassword>
+        </UserAccounts>
+        <AutoLogon>
+          <Username>Administrator</Username>
+          <Enabled>true</Enabled>
+          <LogonCount>1</LogonCount>
+          <Password>
+            <Value>WelcomeOvoko2025</Value>
+            <PlainText>true</PlainText>
+          </Password>
+        </AutoLogon>
       <RegisteredOrganization>Ovoko</RegisteredOrganization>
       <RegisteredOwner>Ovoko</RegisteredOwner>
       <TimeZone>UTC</TimeZone>
