@@ -114,6 +114,40 @@ exit
 '@
 $OOBECMD | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding ascii -Force
 
+$UnattendXml = @'
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+  <settings pass="oobeSystem">
+    <component name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <InputLocale>en-US</InputLocale>
+      <SystemLocale>en-US</SystemLocale>
+      <UILanguage>en-US</UILanguage>
+      <UserLocale>en-US</UserLocale>
+    </component>
+    <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <NetworkLocation>Work</NetworkLocation>
+        <ProtectYourPC>1</ProtectYourPC>
+      </OOBE>
+      <RegisteredOrganization>Ovoko</RegisteredOrganization>
+      <RegisteredOwner>Ovoko</RegisteredOwner>
+      <TimeZone>UTC</TimeZone>
+      <ComputerName>*</ComputerName>
+    </component>
+  </settings>
+</unattend>
+'@
+
+$PantherPath = "C:\Windows\Panther"
+If (!(Test-Path $PantherPath)) {
+    New-Item -Path $PantherPath -ItemType Directory -Force | Out-Null
+}
+$UnattendXml | Out-File -FilePath "$PantherPath\Unattend.xml" -Encoding utf8 -Force
+
 #================================================
 #   Restart-Computer
 #================================================
