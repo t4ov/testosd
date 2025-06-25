@@ -26,6 +26,27 @@ $Params = @{
 }
 Start-OSDCloud @Params
 
+#=======================================================================
+#   [PostOS] Apply Provisioning Package (JumpCloud)
+#=======================================================================
+$ProvisioningPath = "$env:SystemDrive\OSDCloud\Automate\Provisioning"
+if (!(Test-Path $ProvisioningPath)) {
+    New-Item -ItemType Directory -Path $ProvisioningPath -Force | Out-Null
+}
+
+# Copy from external media (adjust drive letter if needed)
+Copy-Item -Path "D:\Ovoko\OSDCloud\Media\OSDCloud\Automate\Provisioning\*.ppkg" -Destination $ProvisioningPath -Force
+
+# Apply all PPKG packages found
+Get-ChildItem -Path $ProvisioningPath -Filter *.ppkg | ForEach-Object {
+    Write-Host "Applying Provisioning Package: $($_.FullName)" -ForegroundColor Cyan
+    try {
+        Install-ProvisioningPackage -PackagePath $_.FullName -ForceInstall -QuietInstall -Verbose
+    } catch {
+        Write-Warning "Failed to apply provisioning package: $_"
+    }
+}
+
 #================================================
 #   [PostOS] OOBEDeploy Configuration
 #================================================
