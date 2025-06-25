@@ -183,8 +183,8 @@ Write-SectionHeader "[PostOS] Define Autopilot Attributes"
 Write-DarkGrayHost "Define Computername"
 $Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
 $lastFourChars = $serial.Substring($serial.Length - 4)
-#$AssignedComputerName = "NB-2$lastFourChars"
-
+$AssignedComputerName = "Ovoko-2$lastFourChars"
+Write-Host $AssignedComputerName
 $ChassisType = (Get-WmiObject -Query "SELECT * FROM Win32_SystemEnclosure").ChassisTypes
 $HyperV = Get-WmiObject -Query "SELECT * FROM Win32_ComputerSystem WHERE Manufacturer LIKE '%Microsoft Corporation%' AND Model LIKE '%Virtual Machine%'"
 $VMware = Get-WmiObject -Query "SELECT * FROM Win32_ComputerSystem WHERE Manufacturer LIKE '%VMware%' AND Model LIKE '%VMware%'"
