@@ -26,25 +26,40 @@ $Params = @{
 }
 Start-OSDCloud @Params
 
+
 #=======================================================================
 #   [PostOS] Apply Provisioning Package (JumpCloud)
 #=======================================================================
+
+# Target location inside system drive
 $ProvisioningPath = "$env:SystemDrive\OSDCloud\Automate\Provisioning"
 if (!(Test-Path $ProvisioningPath)) {
     New-Item -ItemType Directory -Path $ProvisioningPath -Force | Out-Null
 }
 
-# Copy from external media (adjust drive letter if needed)
-Copy-Item -Path "D:\Ovoko\OSDCloud\Media\OSDCloud\Automate\Provisioning\*.ppkg" -Destination $ProvisioningPath -Force
+# Detect external media containing the .ppkg
+$ppkgSourcePath = Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+    $candidate = "$($_.Root)Ovoko\OSDCloud\Media\OSDCloud\Automate\Provisioning"
+    if (Test-Path $candidate) { return $candidate }
+} | Select-Object -First 1
 
-# Apply all PPKG packages found
-Get-ChildItem -Path $ProvisioningPath -Filter *.ppkg | ForEach-Object {
-    Write-Host "Applying Provisioning Package: $($_.FullName)" -ForegroundColor Cyan
-    try {
-        Install-ProvisioningPackage -PackagePath $_.FullName -ForceInstall -QuietInstall -Verbose
-    } catch {
-        Write-Warning "Failed to apply provisioning package: $_"
+if ($ppkgSourcePath) {
+    Write-Host "Found provisioning package source at: $ppkgSourcePath" -ForegroundColor Green
+
+    # Copy all .ppkg files
+    Copy-Item -Path "$ppkgSourcePath\*.ppkg" -Destination $ProvisioningPath -Force
+
+    # Apply each provisioning package
+    Get-ChildItem -Path $ProvisioningPath -Filter *.ppkg | ForEach-Object {
+        Write-Host "Applying Provisioning Package: $($_.FullName)" -ForegroundColor Cyan
+        try {
+            Install-ProvisioningPackage -PackagePath $_.FullName -ForceInstall -QuietInstall -Verbose
+        } catch {
+            Write-Warning "Failed to apply provisioning package: $_"
+        }
     }
+} else {
+    Write-Warning "Provisioning package source folder not found on any attached drive."
 }
 
 #================================================
