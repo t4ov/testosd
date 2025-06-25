@@ -2,7 +2,7 @@
 Set-OSDCloudTemplate -Name 'Ovoko'
 
 #Create my new OSDCloud Workspace
-New-OSDCloudWorkspace -WorkspacePath D:\Ovoko\OSDCloud\Automate
+New-OSDCloudWorkspace -WorkspacePath D:\Ovoko\OSDCloud\Media\OSDCloud\Automate
 
 #Cleanup Languages
 $KeepTheseDirs = @('boot','efi','en-us','sources','fonts','resources')
