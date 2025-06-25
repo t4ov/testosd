@@ -13,9 +13,90 @@ Write-Host -ForegroundColor Green "Importing OSD PowerShell Module"
 Import-Module OSD -Force
 
 #================================================
-#   [OS] Create Unattend.xml BEFORE Install
+#   [OS] Params and Start-OSDCloud
 #================================================
-Write-Host -ForegroundColor Green "Creating Unattend.xml for unattended OOBE"
+$Params = @{
+    OSVersion  = "Windows 11"
+    OSBuild    = "24H2"
+    OSEdition  = "Pro"
+    OSLanguage = "en-us"
+    OSLicense  = "Retail"
+    ZTI        = $true
+    Firmware   = $false
+}
+Start-OSDCloud @Params
+
+#================================================
+#   [PostOS] OOBEDeploy Configuration
+#================================================
+Write-Host -ForegroundColor Green "Creating OOBEDeploy JSON config"
+$OOBEDeployJson = @'
+{
+    "AddNetFX3":  { "IsPresent": true },
+    "Autopilot":  { "IsPresent": false },
+    "RemoveAppx":  [
+        "MicrosoftTeams", "Microsoft.BingWeather", "Microsoft.BingNews", "Microsoft.GamingApp",
+        "Microsoft.GetHelp", "Microsoft.Getstarted", "Microsoft.Messaging", "Microsoft.MicrosoftOfficeHub",
+        "Microsoft.MicrosoftSolitaireCollection", "Microsoft.MicrosoftStickyNotes", "Microsoft.MSPaint",
+        "Microsoft.People", "Microsoft.PowerAutomateDesktop", "Microsoft.StorePurchaseApp", "Microsoft.Todos",
+        "microsoft.windowscommunicationsapps", "Microsoft.WindowsFeedbackHub", "Microsoft.WindowsMaps",
+        "Microsoft.WindowsSoundRecorder", "Microsoft.Xbox.TCUI", "Microsoft.XboxGameOverlay",
+        "Microsoft.XboxGamingOverlay", "Microsoft.XboxIdentityProvider", "Microsoft.XboxSpeechToTextOverlay",
+        "Microsoft.YourPhone", "Microsoft.ZuneMusic", "Microsoft.ZuneVideo"
+    ],
+    "UpdateDrivers": { "IsPresent": true },
+    "UpdateWindows": { "IsPresent": true }
+}
+'@
+
+If (!(Test-Path "C:\ProgramData\OSDeploy")) {
+    New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
+}
+$OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
+
+#================================================
+#   [PostOS] AutopilotOOBE Configuration
+#================================================
+Write-Host -ForegroundColor Green "Define Computername:"
+$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
+$TargetComputername = $Serial.Substring(4,3)
+$AssignedComputerName = "Oovko-$TargetComputername"
+Write-Host -ForegroundColor Red $AssignedComputerName
+Write-Host ""
+
+Write-Host -ForegroundColor Green "Creating AutopilotOOBE JSON config"
+$AutopilotOOBEJson = @"
+{
+    "AssignedComputerName" : "$AssignedComputerName",
+    "Title":  "Autopilot Manual Register"
+}
+"@
+$AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
+
+#================================================
+#   [PostOS] OOBE CMD Command Line
+#================================================
+Write-Host -ForegroundColor Green "Downloading and creating script for OOBE phase"
+Invoke-RestMethod https://raw.githubusercontent.com/t4ov/testosd/refs/heads/main/Set-KeyboardLanguage.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\keyboard.ps1' -Encoding ascii -Force
+# Optional scripts (uncomment if needed):
+# Invoke-RestMethod https://raw.githubusercontent.com/AkosBakos/OSDCloud/main/Install-EmbeddedProductKey.ps1 | Out-File -FilePath 'C:\Windows\Setup\scripts\productkey.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://check-autopilotprereq.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotprereq.ps1' -Encoding ascii -Force
+# Invoke-RestMethod https://start-autopilotoobe.osdcloud.ch | Out-File -FilePath 'C:\Windows\Setup\scripts\autopilotoobe.ps1' -Encoding ascii -Force
+
+$OOBECMD = @'
+@echo off
+start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
+:: start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\productkey.ps1
+:: start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotprereq.ps1
+:: start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\autopilotoobe.ps1
+exit
+'@
+$OOBECMD | Out-File -FilePath 'C:\Windows\Setup\scripts\oobe.cmd' -Encoding ascii -Force
+
+#================================================
+#   [PostOS] Generate and Place Unattend.xml
+#================================================
+Write-Host -ForegroundColor Green "Generating Unattend.xml"
 
 $UnattendXml = @'
 <?xml version="1.0" encoding="utf-8"?>
@@ -56,118 +137,14 @@ $UnattendXml = @'
 </unattend>
 '@
 
-$UnattendPath = "C:\OSDCloud\Unattend.xml"
-If (!(Test-Path "C:\OSDCloud")) {
-    New-Item -Path "C:\OSDCloud" -ItemType Directory -Force | Out-Null
+$PantherPath = "C:\Windows\Panther"
+If (!(Test-Path $PantherPath)) {
+    New-Item -Path $PantherPath -ItemType Directory -Force | Out-Null
 }
-$UnattendXml | Out-File -FilePath $UnattendPath -Encoding utf8 -Force
+$UnattendXml | Out-File -FilePath "$PantherPath\Unattend.xml" -Encoding utf8 -Force
 
 #================================================
-#   [OS] Params and Start-OSDCloud
-#================================================
-$Params = @{
-    OSVersion  = "Windows 11"
-    OSBuild    = "24H2"
-    OSEdition  = "Pro"
-    OSLanguage = "en-us"
-    OSLicense  = "Retail"
-    ZTI        = $true
-    Firmware   = $false
-    Unattend   = $UnattendPath
-}
-Start-OSDCloud @Params
-
-#================================================
-#  [PostOS] OOBEDeploy Configuration
-#================================================
-Write-Host -ForegroundColor Green "Create C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json"
-
-$OOBEDeployJson = @'
-{
-    "AddNetFX3":  { "IsPresent":  true },
-    "Autopilot":  { "IsPresent":  false },
-    "RemoveAppx":  [
-        "MicrosoftTeams",
-        "Microsoft.BingWeather",
-        "Microsoft.BingNews",
-        "Microsoft.GamingApp",
-        "Microsoft.GetHelp",
-        "Microsoft.Getstarted",
-        "Microsoft.Messaging",
-        "Microsoft.MicrosoftOfficeHub",
-        "Microsoft.MicrosoftSolitaireCollection",
-        "Microsoft.MicrosoftStickyNotes",
-        "Microsoft.MSPaint",
-        "Microsoft.People",
-        "Microsoft.PowerAutomateDesktop",
-        "Microsoft.StorePurchaseApp",
-        "Microsoft.Todos",
-        "microsoft.windowscommunicationsapps",
-        "Microsoft.WindowsFeedbackHub",
-        "Microsoft.WindowsMaps",
-        "Microsoft.WindowsSoundRecorder",
-        "Microsoft.Xbox.TCUI",
-        "Microsoft.XboxGameOverlay",
-        "Microsoft.XboxGamingOverlay",
-        "Microsoft.XboxIdentityProvider",
-        "Microsoft.XboxSpeechToTextOverlay",
-        "Microsoft.YourPhone",
-        "Microsoft.ZuneMusic",
-        "Microsoft.ZuneVideo"
-    ],
-    "UpdateDrivers": { "IsPresent":  true },
-    "UpdateWindows": { "IsPresent":  true }
-}
-'@
-
-$OSDeployPath = "C:\ProgramData\OSDeploy"
-If (!(Test-Path $OSDeployPath)) {
-    New-Item $OSDeployPath -ItemType Directory -Force | Out-Null
-}
-$OOBEDeployJson | Out-File -FilePath "$OSDeployPath\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
-
-#================================================
-#  [PostOS] AutopilotOOBE Configuration
-#================================================
-Write-Host -ForegroundColor Green "Define Computername"
-$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
-$TargetComputername = $Serial.Substring(4,3)
-$AssignedComputerName = "Ovoko-$TargetComputername"
-Write-Host -ForegroundColor Red $AssignedComputerName
-
-Write-Host -ForegroundColor Green "Create OSDeploy.AutopilotOOBE.json"
-
-$AutopilotOOBEJson = @"
-{
-    "AssignedComputerName" : "$AssignedComputerName",
-    "Title":  "Autopilot Manual Register"
-}
-"@
-$AutopilotOOBEJson | Out-File -FilePath "$OSDeployPath\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
-
-#================================================
-#  [PostOS] OOBE CMD Command Line
-#================================================
-Write-Host -ForegroundColor Green "Downloading and creating OOBE phase script"
-
-$ScriptPath = 'C:\Windows\Setup\Scripts'
-If (!(Test-Path $ScriptPath)) {
-    New-Item -Path $ScriptPath -ItemType Directory -Force | Out-Null
-}
-
-Invoke-RestMethod https://raw.githubusercontent.com/t4ov/testosd/refs/heads/main/Set-KeyboardLanguage.ps1 | Out-File -FilePath "$ScriptPath\keyboard.ps1" -Encoding ascii -Force
-
-$OOBECMD = @'
-@echo off
-REM Execute OOBE Tasks
-start /wait powershell.exe -NoL -ExecutionPolicy Bypass -F C:\Windows\Setup\Scripts\keyboard.ps1
-REM Add more lines as needed
-exit
-'@
-$OOBECMD | Out-File -FilePath "$ScriptPath\oobe.cmd" -Encoding ascii -Force
-
-#================================================
-#   Final Reboot
+#   Restart-Computer
 #================================================
 Write-Host -ForegroundColor Green "Restarting in 20 seconds!"
 Start-Sleep -Seconds 20
