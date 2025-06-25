@@ -185,7 +185,7 @@ $UnattendXml = @'
 			<UserAccounts>
 				<LocalAccounts>
 					<LocalAccount wcm:action="add">
-						<Name>Admin</Name>
+						<Name>Ovoko</Name>
 						<DisplayName>Ovoko Admin</DisplayName>
 						<Group>Administrators</Group>
 						<Password>
