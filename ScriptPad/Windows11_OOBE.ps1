@@ -148,6 +148,16 @@ $UnattendXml = @'
         <NetworkLocation>Work</NetworkLocation>
         <ProtectYourPC>1</ProtectYourPC>
       </OOBE>
+      
+      <UserAccounts>
+        <AdministratorPassword>
+          <!-- The Base64-encoded password for the built-in Administrator account. -->
+          <!-- The plaintext password is "ChangeThisP@ssw0rd!". You should change this. -->
+          <Value>QwBoAGEAbgBnAGUAVABoAGkAcwBQAEAAcwBzAHcAMAByAGQAQQAhA==</Value>
+          <PlainText>false</PlainText>
+        </AdministratorPassword>
+      </UserAccounts>
+
       <RegisteredOrganization>Ovoko</RegisteredOrganization>
       <RegisteredOwner>Ovoko</RegisteredOwner>
       <TimeZone>UTC</TimeZone>
