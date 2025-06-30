@@ -27,40 +27,7 @@ $Params = @{
 Start-OSDCloud @Params
 
 
-#=======================================================================
-#   [PostOS] Apply Provisioning Package (JumpCloud)
-#=======================================================================
 
-# Target location inside system drive
-$ProvisioningPath = "$env:SystemDrive\OSDCloud\Automate\Provisioning"
-if (!(Test-Path $ProvisioningPath)) {
-    New-Item -ItemType Directory -Path $ProvisioningPath -Force | Out-Null
-}
-
-# Detect external media containing the .ppkg
-$ppkgSourcePath = Get-PSDrive -PSProvider FileSystem | ForEach-Object {
-    $candidate = "$($_.Root)Ovoko\OSDCloud\Media\OSDCloud\Automate\Provisioning"
-    if (Test-Path $candidate) { return $candidate }
-} | Select-Object -First 1
-
-if ($ppkgSourcePath) {
-    Write-Host "Found provisioning package source at: $ppkgSourcePath" -ForegroundColor Green
-
-    # Copy all .ppkg files
-    Copy-Item -Path "$ppkgSourcePath\*.ppkg" -Destination $ProvisioningPath -Force
-
-    # Apply each provisioning package
-    Get-ChildItem -Path $ProvisioningPath -Filter *.ppkg | ForEach-Object {
-        Write-Host "Applying Provisioning Package: $($_.FullName)" -ForegroundColor Cyan
-        try {
-            Install-ProvisioningPackage -PackagePath $_.FullName -ForceInstall -QuietInstall -Verbose
-        } catch {
-            Write-Warning "Failed to apply provisioning package: $_"
-        }
-    }
-} else {
-    Write-Warning "Provisioning package source folder not found on any attached drive."
-}
 
 #================================================
 #   [PostOS] OOBEDeploy Configuration
@@ -90,24 +57,6 @@ If (!(Test-Path "C:\ProgramData\OSDeploy")) {
 }
 $OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
 
-#================================================
-#   [PostOS] AutopilotOOBE Configuration
-#================================================
-Write-Host -ForegroundColor Green "Define Computername:"
-$Serial = Get-WmiObject Win32_bios | Select-Object -ExpandProperty SerialNumber
-$TargetComputername = $Serial.Substring(4,3)
-$AssignedComputerName = "Ovoko-$TargetComputername"
-Write-Host -ForegroundColor Red $AssignedComputerName
-Write-Host ""
-
-Write-Host -ForegroundColor Green "Creating AutopilotOOBE JSON config"
-$AutopilotOOBEJson = @"
-{
-    "AssignedComputerName" : "$AssignedComputerName",
-    "Title":  "Autopilot Manual Register"
-}
-"@
-$AutopilotOOBEJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
 
 #================================================
 #   [PostOS] OOBE CMD Command Line
