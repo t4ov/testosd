@@ -50,10 +50,10 @@ try {
     $newHostname = "O-$serialNumber"
 
     # Rename the computer
-    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop
+    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop 
 
-    Write-Host "Hostname successfully changed to $newHostname"
-    Write-Warning "A system restart is required for the name change to take effect."
+    Write-Host "Hostname successfully changed to $newHostname" -ForegroundColor Green
+    Write-Warning "A system restart is required for the name change to take effect." 
 
 } catch {
     Write-Error "Failed to rename the computer: $_"
