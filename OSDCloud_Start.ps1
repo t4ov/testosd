@@ -10,4 +10,4 @@ Import-Module OSD -Force
 
 #Start OSDCloudScriptPad
 Write-Host -ForegroundColor Green "Start OSDPad"
-Start-OSDPad -RepoOwner t4ov -RepoName testosd -RepoFolder ScriptPad -BrandingTitle 'Ovoko Windows Cloud Deployment'
+Start-OSDPad -RepoOwner t4ov -RepoName testosd -RepoFolder ScriptPad -Hide Script -BrandingTitle 'Ovoko Windows Cloud Deployment'
