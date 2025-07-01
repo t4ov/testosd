@@ -30,18 +30,33 @@ Start-Sleep -Seconds 5
 #Set-WinUserLanguageList $LanguageList -Force
 <#
 .SYNOPSIS
-    A simple script to set the computer's hostname based on its serial number.
+    Sets the computer's hostname to "O-<SerialNumber>".
 .DESCRIPTION
-    This script renames the computer to the format "O-<SerialNumber>".
-    It must be run with administrative privileges.
+    This script renames the local computer using the BIOS serial number, prefixed with "O-".
+    Requires administrative privileges.
 #>
 
 #Requires -RunAsAdministrator
 
-# Get the serial number and construct the new name in one step.
-$newHostname = "O-$((Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim())"
+try {
+    # Retrieve the serial number from BIOS
+    $serialNumber = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim()
 
-# Rename the computer and warn that a restart is needed.
-Rename-Computer -NewName $newHostname -Force -WarningAction SilentlyContinue
-Write-Warning "Hostname changed to $newHostname. A restart is required for this change to take effect."
+    if ([string]::IsNullOrWhiteSpace($serialNumber)) {
+        throw "Serial number could not be retrieved or is empty."
+    }
+
+    # Format new hostname
+    $newHostname = "O-$serialNumber"
+
+    # Rename the computer
+    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop
+
+    Write-Host "Hostname successfully changed to $newHostname"
+    Write-Warning "A system restart is required for the name change to take effect."
+
+} catch {
+    Write-Error "Failed to rename the computer: $_"
+}
+
 Stop-Transcript
