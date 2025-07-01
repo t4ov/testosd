@@ -28,5 +28,20 @@ Start-Sleep -Seconds 5
 #$LanguageList = Get-WinUserLanguageList
 #$LanguageList.Remove(($LanguageList | Where-Object LanguageTag -like 'en-US'))
 #Set-WinUserLanguageList $LanguageList -Force
+<#
+.SYNOPSIS
+    A simple script to set the computer's hostname based on its serial number.
+.DESCRIPTION
+    This script renames the computer to the format "O-<SerialNumber>".
+    It must be run with administrative privileges.
+#>
 
+#Requires -RunAsAdministrator
+
+# Get the serial number and construct the new name in one step.
+$newHostname = "O-$((Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim())"
+
+# Rename the computer and warn that a restart is needed.
+Rename-Computer -NewName $newHostname -Force -WarningAction SilentlyContinue
+Write-Warning "Hostname changed to $newHostname. A restart is required for this change to take effect."
 Stop-Transcript
