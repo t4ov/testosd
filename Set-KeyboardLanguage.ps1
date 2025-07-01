@@ -58,5 +58,5 @@ try {
 } catch {
     Write-Error "Failed to rename the computer: $_"
 }
-
+Start-Sleep -Seconds 10
 Stop-Transcript
