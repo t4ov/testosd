@@ -1,4 +1,4 @@
-$scriptPath = "C:\Windows\Scripts\RenamePC.ps1"
+$scriptPath = "C:\Windows\Setup\Scripts\RenameFR.ps1"
 
 @'
 try {
@@ -13,4 +13,4 @@ try {
 '@ | Out-File -FilePath $scriptPath -Encoding ASCII
 
 
-schtasks.exe /Create /TN "RenamePCOnFirstLogon" /TR "powershell.exe -NoProfile -WindowStyle Hidden -File C:\Windows\Scripts\RenamePC.ps1" /SC ONLOGON /RL HIGHEST /F
+schtasks.exe /Create /TN "RenamePCOnFirstLogon" /TR "powershell.exe -NoProfile -WindowStyle Hidden -File C:\Windows\Setup\Scripts\RenameFR.ps1" /SC ONLOGON /RL HIGHEST /F
