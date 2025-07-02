@@ -47,7 +47,7 @@ try {
     }
 
     # Format new hostname
-    $newHostname = "O-$serialNumber"
+    $newHostname = "O-FR-$serialNumber"
 
     # Rename the computer
     Rename-Computer -NewName $newHostname -Force -ErrorAction Stop 
