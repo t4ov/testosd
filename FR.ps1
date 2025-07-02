@@ -28,35 +28,34 @@ Start-Sleep -Seconds 5
 #$LanguageList = Get-WinUserLanguageList
 #$LanguageList.Remove(($LanguageList | Where-Object LanguageTag -like 'en-US'))
 #Set-WinUserLanguageList $LanguageList -Force
-<#
-.SYNOPSIS
-    Sets the computer's hostname to "O-FR-<SerialNumber>".
-.DESCRIPTION
-    This script renames the local computer using the BIOS serial number, prefixed with "O-".
-    Requires administrative privileges.
-#>
 
-#Requires -RunAsAdministrator
+$scriptPath = "C:\Scripts\RenamePC.ps1"
 
+# Save your rename script to $scriptPath (adjust path as needed)
+@'
 try {
-    # Retrieve the serial number from BIOS
     $serialNumber = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim()
-
-    if ([string]::IsNullOrWhiteSpace($serialNumber)) {
-        throw "Serial number could not be retrieved or is empty."
-    }
-
-    # Format new hostname
+    if ([string]::IsNullOrWhiteSpace($serialNumber)) { throw "Serial number empty" }
     $newHostname = "O-FR-$serialNumber"
-
-    # Rename the computer
-    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop 
-
-    Write-Host "Hostname successfully changed to $newHostname" -ForegroundColor Green
-    Write-Warning "A system restart is required for the name change to take effect." 
-
+    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop
+    Restart-Computer -Force
 } catch {
-    Write-Error "Failed to rename the computer: $_"
+    # Log error or ignore
 }
+'@ | Out-File -FilePath $scriptPath -Encoding ASCII
+
+# Create scheduled task XML or use Register-ScheduledTask cmdlet:
+$action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-NoProfile -WindowStyle Hidden -File `"$scriptPath`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -Once
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
+
+Register-ScheduledTask -TaskName "RenamePCOnFirstLogon" -Action $action -Trigger $trigger -Principal $principal
+
+# Optionally, modify script to delete task after successful run
+
+
+
+
+
 Start-Sleep -Seconds 10
 Stop-Transcript
