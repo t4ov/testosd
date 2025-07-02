@@ -29,32 +29,6 @@ Start-Sleep -Seconds 5
 #$LanguageList.Remove(($LanguageList | Where-Object LanguageTag -like 'en-US'))
 #Set-WinUserLanguageList $LanguageList -Force
 
-$scriptPath = "C:\Scripts\RenamePC.ps1"
-
-# Save your rename script to $scriptPath (adjust path as needed)
-@'
-try {
-    $serialNumber = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim()
-    if ([string]::IsNullOrWhiteSpace($serialNumber)) { throw "Serial number empty" }
-    $newHostname = "O-FR-$serialNumber"
-    Rename-Computer -NewName $newHostname -Force -ErrorAction Stop
-    Restart-Computer -Force
-} catch {
-    # Log error or ignore
-}
-'@ | Out-File -FilePath $scriptPath -Encoding ASCII
-
-# Create scheduled task XML or use Register-ScheduledTask cmdlet:
-$action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-NoProfile -WindowStyle Hidden -File `"$scriptPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -Once
-$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -RunLevel Highest
-
-Register-ScheduledTask -TaskName "RenamePCOnFirstLogon" -Action $action -Trigger $trigger -Principal $principal
-
-# Optionally, modify script to delete task after successful run
-
-
-
 
 
 Start-Sleep -Seconds 10
