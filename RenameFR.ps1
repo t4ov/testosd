@@ -11,3 +11,6 @@ try {
     # Log error if needed
 }
 '@ | Out-File -FilePath $scriptPath -Encoding ASCII
+
+
+schtasks.exe /Create /TN "RenamePCOnFirstLogon" /TR "powershell.exe -NoProfile -WindowStyle Hidden -File C:\Windows\Scripts\RenamePC.ps1" /SC ONLOGON /RL HIGHEST /F
