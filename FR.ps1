@@ -54,6 +54,10 @@ try {
 
     Write-Host "Hostname successfully changed to $newHostname" -ForegroundColor Green
     Write-Warning "A system restart is required for the name change to take effect." 
+    Write-Host  -ForegroundColor Green "Restarting in 10 seconds"
+    Start-Sleep -Seconds 10
+    # Restart the computer
+    Restart-Computer -Force
 
 } catch {
     Write-Error "Failed to rename the computer: $_"
