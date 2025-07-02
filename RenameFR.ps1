@@ -1,3 +1,4 @@
+Write-Host -ForegroundColor Green "Creating Scheduled task for PC rename"
 $scriptPath = "C:\Windows\Setup\Scripts\RenameFR.ps1"
 
 @'
@@ -14,3 +15,5 @@ try {
 
 
 schtasks.exe /Create /TN "RenamePCOnFirstLogon" /TR "powershell.exe -NoProfile -WindowStyle Hidden -File C:\Windows\Setup\Scripts\RenameFR.ps1" /SC ONLOGON /RL HIGHEST /F
+
+start-sleep -seconds 10
