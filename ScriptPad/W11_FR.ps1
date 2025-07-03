@@ -56,6 +56,44 @@ If (!(Test-Path "C:\ProgramData\OSDeploy")) {
     New-Item "C:\ProgramData\OSDeploy" -ItemType Directory -Force | Out-Null
 }
 $OOBEDeployJson | Out-File -FilePath "C:\ProgramData\OSDeploy\OSDeploy.OOBEDeploy.json" -Encoding ascii -Force
+#================================================
+#  [PostOS] AutopilotOOBE Configuration Staging
+#================================================
+#================================================
+#  Generate AutopilotOOBE Config with Hostname
+#================================================
+
+# Get the BIOS serial number
+$Serial = (Get-CimInstance -ClassName Win32_BIOS).SerialNumber.Trim()
+
+# Check if serial was retrieved successfully
+if ([string]::IsNullOrWhiteSpace($Serial)) {
+    Write-Error "Serial number could not be retrieved or is empty."
+    exit 1
+}
+
+# Construct the computer name
+$AssignedComputerName = "O-FR-$Serial"
+Write-Host -ForegroundColor Red $AssignedComputerName
+Write-Host ""
+Start-Sleep -Seconds 10
+# Create the JSON content
+$AutopilotOOBEJson = @"
+{
+    "AssignedComputerName": "$AssignedComputerName"
+}
+"@
+
+# Ensure the output directory exists
+$osdeployPath = "C:\ProgramData\OSDeploy"
+if (!(Test-Path $osdeployPath)) {
+    New-Item -Path $osdeployPath -ItemType Directory -Force | Out-Null
+}
+
+# Write the JSON to file
+$AutopilotOOBEJson | Out-File -FilePath "$osdeployPath\OSDeploy.AutopilotOOBE.json" -Encoding ascii -Force
+
+Write-Host "OSDeploy.AutopilotOOBE.json created with computer name: $AssignedComputerName" -ForegroundColor Green
 
 
 #================================================
