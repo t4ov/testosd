@@ -36,7 +36,7 @@ Write-Host -ForegroundColor Green "Creating OOBEDeploy JSON config"
 $OOBEDeployJson = @'
 {
     "AddNetFX3":  { "IsPresent": true },
-    "Autopilot":  { "IsPresent": false },
+    "Autopilot":  { "IsPresent": true },
     "RemoveAppx":  [
         "MicrosoftTeams", "Microsoft.BingWeather", "Microsoft.BingNews", "Microsoft.GamingApp",
         "Microsoft.GetHelp", "Microsoft.Getstarted", "Microsoft.Messaging", "Microsoft.MicrosoftOfficeHub",
